@@ -911,7 +911,7 @@ input:focus {
     }
 
     .match-card-content {
-        flex-direction: column;
+        /*        flex-direction: column;   */
         gap: 1rem;
     }
 
