@@ -120,30 +120,30 @@ render_header("Panel Administrativo", $user, "admin");
                         </div>
                         
                         <?php foreach ($day_matches as $match): ?>
-                            <form action="" method="POST" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--ios-input-bg); border: 1px solid var(--ios-border); border-radius: 12px;">
+                            <form action="" method="POST" class="admin-match-row">
                                 <input type="hidden" name="match_id" value="<?php echo $match['id']; ?>">
-                                <div style="width: 40px; font-size: 0.85rem; color: var(--ios-text-sec); font-weight: 600;"><?php echo date('H:i', strtotime($match['match_date'])); ?></div>
+                                <div class="admin-match-time"><?php echo date('H:i', strtotime($match['match_date'])); ?></div>
                                 
                                 <?php if ($match['group_name']): ?>
-                                    <div style="width: 25px; text-align: center; font-size: 0.75rem; font-weight: 700; color: white; background: var(--ios-blue); padding: 0.15rem 0.3rem; border-radius: 6px;">
+                                    <div class="admin-match-group">
                                         <?php echo htmlspecialchars($match['group_name']); ?>
                                     </div>
                                 <?php else: ?>
-                                    <div style="width: 25px;"></div>
+                                    <div style="width: 25px; display: none;" class="desktop-only-group"></div>
                                 <?php endif; ?>
 
-                                <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
-                                    <span style="font-weight: 600;"><?php echo htmlspecialchars($match['team1']); ?></span>
-                                    <?php $c1 = getFlagCode($match['team1']); if($c1): ?><img src="https://flagcdn.com/w20/<?php echo $c1; ?>.png" style="width: 20px; border-radius: 2px;"><?php endif; ?>
+                                <div class="admin-team team-left">
+                                    <span><?php echo htmlspecialchars($match['team1']); ?></span>
+                                    <?php $c1 = getFlagCode($match['team1']); if($c1): ?><img src="https://flagcdn.com/w20/<?php echo $c1; ?>.png" class="admin-flag"><?php endif; ?>
                                 </div>
-                                <input type="number" name="result1" class="score-input" value="<?php echo $match['result1']; ?>" style="width: 50px; padding: 0.5rem; text-align: center;" min="0">
-                                <span style="color: var(--ios-text-sec);">-</span>
-                                <input type="number" name="result2" class="score-input" value="<?php echo $match['result2']; ?>" style="width: 50px; padding: 0.5rem; text-align: center;" min="0">
-                                <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">
-                                    <?php $c2 = getFlagCode($match['team2']); if($c2): ?><img src="https://flagcdn.com/w20/<?php echo $c2; ?>.png" style="width: 20px; border-radius: 2px;"><?php endif; ?>
-                                    <span style="font-weight: 600;"><?php echo htmlspecialchars($match['team2']); ?></span>
+                                <input type="number" name="result1" class="score-input admin-score" value="<?php echo $match['result1']; ?>" min="0">
+                                <span class="admin-vs">-</span>
+                                <input type="number" name="result2" class="score-input admin-score" value="<?php echo $match['result2']; ?>" min="0">
+                                <div class="admin-team team-right">
+                                    <?php $c2 = getFlagCode($match['team2']); if($c2): ?><img src="https://flagcdn.com/w20/<?php echo $c2; ?>.png" class="admin-flag"><?php endif; ?>
+                                    <span><?php echo htmlspecialchars($match['team2']); ?></span>
                                 </div>
-                                <button type="submit" name="update_match" class="btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem;">OK</button>
+                                <button type="submit" name="update_match" class="btn admin-btn">OK</button>
                             </form>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
