@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="glass-card animate-fade-in" style="width: 100%; max-width: 450px;">
                 <div style="text-align: center; margin-bottom: 2rem;">
                     <a href="index.php" class="logo">
-                        <img src="../assets/images/logo-mundial.svg" alt="Logo FSInet Prode">
+                        <img src="../assets/images/logo-mundial.png" alt="Logo FSInet Prode">
                     </a>
                     <h2 style="text-align: center;">ProdeMundial 2026</h2>
                 </div>
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="glass-card animate-fade-in onboarding-container">
                 <div style="text-align: center; margin-bottom: 1.5rem;">
                     <a href="index.php" class="logo">
-                        <img src="../assets/images/logo-mundial.svg" alt="Logo FSInet Prode">
+                        <img src="../assets/images/logo-mundial.png" alt="Logo FSInet Prode">
                     </a>
                 </div>
 

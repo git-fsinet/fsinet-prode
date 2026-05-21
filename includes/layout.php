@@ -36,7 +36,7 @@ function render_header($title, $user, $current_page) {
         <aside class="sidebar">
             <div class="sidebar-header">
                     <a href="resumen.php" class="logo-side">
-                        <img src="../assets/images/logo-mundial.svg" alt="Logo FSInet Prode">
+                        <img src="../assets/images/logo-mundial.png" alt="Logo FSInet Prode">
                     </a>
             </div>
             
