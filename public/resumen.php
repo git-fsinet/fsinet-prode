@@ -118,13 +118,13 @@ render_header("Resumen", $user, "resumen");
                             <?php if ($code1): ?>
                                 <img src="https://flagcdn.com/w40/<?php echo $code1; ?>.png" alt="" class="flag">
                             <?php endif; ?>
-                            <span style="font-size: 1.1rem; font-weight: 600;"><?php echo htmlspecialchars($match['team1']); ?></span>
+                            <span><?php echo htmlspecialchars($match['team1']); ?></span>
                         </div>
                         <div class="score-inputs" style="font-weight: 600; color: var(--ios-text-sec);">
                             <?php echo date('H:i', strtotime($match['match_date'])); ?>hs
                         </div>
                         <div class="team-info right">
-                            <span style="font-size: 1.1rem; font-weight: 600;"><?php echo htmlspecialchars($match['team2']); ?></span>
+                            <span><?php echo htmlspecialchars($match['team2']); ?></span>
                             <?php $code2 = getFlagCode($match['team2']); ?>
                             <?php if ($code2): ?>
                                 <img src="https://flagcdn.com/w40/<?php echo $code2; ?>.png" alt="" class="flag">
