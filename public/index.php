@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $full_name = trim($_POST['full_name'] ?? '');
         }
 
-        if (!str_ends_with($email, '@fsinet.com.ar')) {
+        if (!preg_match('/@fsinet\.com\.ar$/i', $email)) {
             $error = 'Solo se permiten correos @fsinet.com.ar';
         } else {
             // Check if user exists
