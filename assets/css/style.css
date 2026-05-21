@@ -407,8 +407,9 @@ input:focus {
 
 .team-info span {
     font-size: 1.15rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ios-text);
+    color: var(--ios-blue);
 }
 
 .team-info.right {
@@ -779,8 +780,6 @@ input:focus {
     display: none;
 }
 
-@media (max-width: 768px) {
-
 /* Admin Panel Match Rows */
 .admin-match-row {
     display: flex;
@@ -858,7 +857,9 @@ input:focus {
     flex-shrink: 0;
 }
 
-/* App layout: columna */
+@media (max-width: 768px) {
+    /* App layout: columna */
+
     .app-layout {
         flex-direction: column;
         height: auto;
@@ -1019,7 +1020,7 @@ input:focus {
         word-break: break-word;
         text-align: left;
     }
-    
+
     .team-info.right span {
         text-align: right;
     }
@@ -1071,4 +1072,11 @@ input:focus {
         padding: 0.4rem 0.6rem;
         font-size: 0.7rem;
     }
+
+    .glass-card {
+        padding: 0.5rem;
+        border-radius: 15px;
+    }
+
+
 }

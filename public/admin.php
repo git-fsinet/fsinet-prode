@@ -95,7 +95,7 @@ render_header("Panel Administrativo", $user, "admin");
                     <form action="" method="POST">
                         <input type="hidden" name="stage_id" value="<?php echo $stage['id']; ?>">
                         <input type="hidden" name="is_open" value="<?php echo $stage['is_open']; ?>">
-                        <button type="submit" name="toggle_stage" class="btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: <?php echo $stage['is_open'] ? 'var(--error)' : 'var(--success)'; ?>">
+                        <button type="submit" name="toggle_stage" class="btn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: <?php echo $stage['is_open'] ? 'var(--ios-error)' : 'var(--ios-success)'; ?>">
                             <?php echo $stage['is_open'] ? 'CERRAR ETAPA' : 'ABRIR ETAPA'; ?>
                         </button>
                     </form>
