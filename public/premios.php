@@ -103,7 +103,7 @@ render_header("Premios", $user, "premios");
         <div style="display:inline-flex; align-items:center; justify-content:center; width: 80px; height: 80px; background: linear-gradient(135deg, rgba(12, 74, 211, 0.1), rgba(94, 92, 230, 0.1)); color: var(--ios-blue); border-radius: 24px; margin-bottom: 1.5rem; transform: rotate(-5deg); box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
             <i class="ph-fill ph-gift" style="font-size: 42px;"></i>
         </div>
-        <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px;">Premios del Torneo</h2>
+        <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px;">Premios del Prode</h2>
         <p style="color: var(--ios-text-sec); font-size: 1.2rem;">¡Participa y gana estos increíbles premios!</p>
     </div>
 
