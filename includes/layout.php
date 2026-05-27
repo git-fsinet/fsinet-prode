@@ -28,7 +28,7 @@ function render_header($title, $user, $current_page) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title); ?> | FSInet Prode</title>
     <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -53,20 +53,23 @@ function render_header($title, $user, $current_page) {
             
             <nav class="sidebar-nav">
                 <a href="resumen.php" class="nav-item <?php echo $current_page == 'resumen' ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> Resumen
+                    <span class="nav-icon"><i class="ph-duotone ph-squares-four"></i></span> Resumen
                 </a>
                 <a href="fixture.php" class="nav-item <?php echo $current_page == 'fixture' ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i data-lucide="calendar-days"></i></span> Fixture
+                    <span class="nav-icon"><i class="ph-duotone ph-calendar-blank"></i></span> Fixture
                 </a>
                 <a href="ranking.php" class="nav-item <?php echo $current_page == 'ranking' ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i data-lucide="trophy"></i></span> Ranking
+                    <span class="nav-icon"><i class="ph-duotone ph-trophy"></i></span> Ranking
                 </a>
                 <a href="reglas.php" class="nav-item <?php echo $current_page == 'reglas' ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i data-lucide="book-open"></i></span> Reglas
+                    <span class="nav-icon"><i class="ph-duotone ph-book-open"></i></span> Reglas
+                </a>
+                <a href="premios.php" class="nav-item <?php echo $current_page == 'premios' ? 'active' : ''; ?>">
+                    <span class="nav-icon"><i class="ph-duotone ph-gift"></i></span> Premios
                 </a>
                 <?php if ($user['is_admin']): ?>
                     <a href="admin.php" class="nav-item <?php echo $current_page == 'admin' ? 'active' : ''; ?>">
-                        <span class="nav-icon"><i data-lucide="settings"></i></span> Admin
+                        <span class="nav-icon"><i class="ph-duotone ph-gear"></i></span> Admin
                     </a>
                 <?php endif; ?>
             </nav>
@@ -117,6 +120,10 @@ function render_footer($user = null, $current_page = '') {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 Reglas
             </a>
+            <a href="premios.php" class="mobile-nav-item <?php echo $current_page == 'premios' ? 'active' : ''; ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect width="20" height="5" x="2" y="7"/><line x1="12" x2="12" y1="22" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                Premios
+            </a>
             <?php if ($user && $user['is_admin']): ?>
             <a href="admin.php" class="mobile-nav-item <?php echo $current_page == 'admin' ? 'active' : ''; ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -126,9 +133,7 @@ function render_footer($user = null, $current_page = '') {
         </nav>
 
     </div>
-    <script>lucide.createIcons();</script>
 </body>
-</html>
-    <?php
+</html>    <?php
 }
 ?>

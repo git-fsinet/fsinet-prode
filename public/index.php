@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prode Mundial 2026 | FSInet</title>
     <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="login-page">
     <div class="container" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
@@ -147,17 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
                                 <label style="flex: 1; text-align: center; background: var(--ios-input-bg); padding: 1rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" id="label_fan_1" onclick="selectFan(1)">
                                     <input type="radio" name="is_fan" value="1" style="display: none;">
-                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i data-lucide="heart" style="width:32px;height:32px;"></i></div>
+                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i class="ph-duotone ph-heart" style="font-size:32px;"></i></div>
                                     <div style="font-weight: 600; font-size: 0.85rem;">Soy fan</div>
                                 </label>
                                 <label style="flex: 1; text-align: center; background: var(--ios-input-bg); padding: 1rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" id="label_fan_0" onclick="selectFan(0)">
                                     <input type="radio" name="is_fan" value="0" style="display: none;" checked>
-                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-text-sec);"><i data-lucide="meh" style="width:32px;height:32px;"></i></div>
+                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-text-sec);"><i class="ph-duotone ph-smiley-meh" style="font-size:32px;"></i></div>
                                     <div style="font-weight: 600; font-size: 0.85rem;">Sólo por el mundial</div>
                                 </label>
                                 <label style="flex: 1; text-align: center; background: var(--ios-input-bg); padding: 1rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" id="label_fan_2" onclick="selectFan(2)">
                                     <input type="radio" name="is_fan" value="2" style="display: none;">
-                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-error);"><i data-lucide="x-circle" style="width:32px;height:32px;"></i></div>
+                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-error);"><i class="ph-duotone ph-x-circle" style="font-size:32px;"></i></div>
                                     <div style="font-weight: 600; font-size: 0.85rem;">No me gusta</div>
                                 </label>
                             </div>
@@ -172,12 +172,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
                                 <label style="flex: 1; text-align: center; background: var(--ios-input-bg); padding: 1.5rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" id="label_mode_solo" onclick="selectMode('solo')">
                                     <input type="radio" name="play_mode" value="solo" style="display: none;" checked>
-                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i data-lucide="user" style="width:40px;height:40px;"></i></div>
+                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i class="ph-duotone ph-user" style="font-size:40px;"></i></div>
                                     <div style="font-weight: 600;">Me la juego solo</div>
                                 </label>
                                 <label style="flex: 1; text-align: center; background: var(--ios-input-bg); padding: 1.5rem; border-radius: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" id="label_mode_team" onclick="selectMode('team')">
                                     <input type="radio" name="play_mode" value="team" style="display: none;">
-                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i data-lucide="users" style="width:40px;height:40px;"></i></div>
+                                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; color: var(--ios-blue);"><i class="ph-duotone ph-users" style="font-size:40px;"></i></div>
                                     <div style="font-weight: 600;">Prefiero en equipo</div>
                                 </label>
                             </div>
@@ -353,6 +353,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 </html>
 
-<script>
-lucide.createIcons();
-</script>

@@ -28,13 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['predictions'])) {
 
         if ($score1 !== '' && $score2 !== '') {
             // Get match date and stage open status
-            $stmt = $pdo->prepare("SELECT m.match_date, m.status, s.is_open FROM matches m JOIN stages s ON m.stage_id = s.id WHERE m.id = ?");
+            $stmt = $pdo->prepare("SELECT m.match_date, m.status, m.stage_id, s.is_open FROM matches m JOIN stages s ON m.stage_id = s.id WHERE m.id = ?");
             $stmt->execute([$match_id]);
             $match_info = $stmt->fetch();
 
             if ($match_info && $match_info['is_open'] && $match_info['status'] !== 'finished') {
-                // Check 1-hour deadline
-                $deadline = strtotime($match_info['match_date']) - 3600;
+                // Get the first match date of this stage
+                $stmt_fm = $pdo->prepare("SELECT MIN(match_date) as first_match_date FROM matches WHERE stage_id = ?");
+                $stmt_fm->execute([$match_info['stage_id']]);
+                $fm_info = $stmt_fm->fetch();
+                $first_match_date = ($fm_info && $fm_info['first_match_date']) ? $fm_info['first_match_date'] : $match_info['match_date'];
+
+                // Check 2-hour deadline for the entire stage
+                $deadline = strtotime($first_match_date) - 7200;
                 if (time() <= $deadline) {
                     // UPSERT: insert or update
                     $stmt = $pdo->prepare("SELECT id FROM predictions WHERE user_id = ? AND match_id = ?");
@@ -58,6 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['predictions'])) {
 
 // Get Stages for Tab Navigation
 $stages = $pdo->query("SELECT * FROM stages ORDER BY display_order ASC")->fetchAll();
+
+// Get first match date of each stage
+$stage_first_matches = [];
+$stmt = $pdo->query("SELECT stage_id, MIN(match_date) as first_match_date FROM matches GROUP BY stage_id");
+foreach ($stmt->fetchAll() as $row) {
+    if ($row['first_match_date']) {
+        $stage_first_matches[$row['stage_id']] = $row['first_match_date'];
+    }
+}
 
 // Get Available Groups for the selected stage (if it's Group Stage)
 $available_groups = [];
@@ -127,6 +142,56 @@ render_header("Fixture", $user, "fixture");
         <?php endif; ?>
 
         <form action="" method="POST">
+        
+        <?php 
+        $current_stage_open = false;
+        foreach ($stages as $s) if ($s['id'] == $current_stage) $current_stage_open = $s['is_open'];
+        $current_stage_first_match = isset($stage_first_matches[$current_stage]) ? $stage_first_matches[$current_stage] : null;
+        $stage_deadline = $current_stage_first_match ? strtotime($current_stage_first_match) - 7200 : 0;
+        $stage_deadline_passed = time() >= $stage_deadline;
+        ?>
+        <?php if ($current_stage_open && !$stage_deadline_passed && $stage_deadline > 0): ?>
+            <div class="glass-card animate-fade-in" style="margin-bottom: 2rem; text-align: center; background: linear-gradient(135deg, var(--ios-blue), #5e5ce6); color: white; padding: 1.5rem; border: none; box-shadow: 0 10px 30px rgba(12, 74, 211, 0.3);">
+                <h3 style="margin-top: 0; font-size: 1rem; font-weight: 600; opacity: 0.9;">Tiempo límite para cargar esta etapa:</h3>
+                <div id="countdown-banner" data-deadline="<?php echo $stage_deadline; ?>" style="font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 2px; margin-top: 0.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    --:--:--
+                </div>
+            </div>
+            <script>
+                const serverTimeAtLoad = <?php echo time(); ?>;
+                const clientTimeAtLoad = performance.now();
+
+                function updateCountdown() {
+                    const banner = document.getElementById('countdown-banner');
+                    if (!banner) return;
+                    const deadline = parseInt(banner.getAttribute('data-deadline'), 10);
+                    
+                    // Calculate current server time without relying on the system clock
+                    const elapsedSecs = Math.floor((performance.now() - clientTimeAtLoad) / 1000);
+                    const currentServerTime = serverTimeAtLoad + elapsedSecs;
+                    const diff = deadline - currentServerTime;
+                    
+                    if (diff <= 0) {
+                        banner.innerHTML = "00d 00h 00m 00s";
+                        location.reload();
+                        return;
+                    }
+                    
+                    const d = Math.floor(diff / 86400);
+                    const h = Math.floor((diff % 86400) / 3600);
+                    const m = Math.floor((diff % 3600) / 60);
+                    const s = diff % 60;
+                    
+                    banner.innerHTML = 
+                        (d < 10 ? '0' + d : d) + 'd ' +
+                        (h < 10 ? '0' + h : h) + 'h ' + 
+                        (m < 10 ? '0' + m : m) + 'm ' + 
+                        (s < 10 ? '0' + s : s) + 's';
+                }
+                setInterval(updateCountdown, 1000);
+                updateCountdown();
+            </script>
+        <?php endif; ?>
             <?php if (empty($grouped_matches)): ?>
                 <div class="glass-card" style="text-align: center; padding: 4rem;">
                     <p style="color: var(--text-muted);">Próximamente... Los partidos de esta etapa aún no han sido definidos.</p>
@@ -140,11 +205,13 @@ render_header("Fixture", $user, "fixture");
                             $pred = isset($predictions[$match['id']]) ? $predictions[$match['id']] : null;
                             $is_open = false;
                             foreach ($stages as $s) if ($s['id'] == $match['stage_id']) $is_open = $s['is_open'];
-                            // Lock if: stage closed, match finished, OR less than 1 hour to kickoff
-                            $deadline_passed = (strtotime($match['match_date']) - time()) < 3600;
+                            // Lock if: stage closed, match finished, OR less than 2 hours to stage kickoff
+                            $first_match_date = isset($stage_first_matches[$match['stage_id']]) ? $stage_first_matches[$match['stage_id']] : $match['match_date'];
+                            $deadline_timestamp = strtotime($first_match_date) - 7200;
+                            $deadline_passed = time() > $deadline_timestamp;
                             $is_locked = !$is_open || $match['status'] === 'finished' || $deadline_passed;
                             // Time remaining label
-                            $secs_remaining = strtotime($match['match_date']) - time();
+                            $secs_remaining = $deadline_timestamp - time();
                             $show_countdown = (!$is_locked || $deadline_passed) && $match['status'] !== 'finished';
                         ?>
                             <div class="glass-card match-card <?php echo $is_locked ? 'locked' : ''; ?> animate-fade-in">
@@ -158,19 +225,27 @@ render_header("Fixture", $user, "fixture");
                                         </div>
 
                                         <div class="score-inputs">
-                                            <input type="number" 
-                                                   name="predictions[<?php echo $match['id']; ?>][score1]" 
-                                                   class="score-input" 
-                                                   value="<?php echo $pred ? $pred['score1'] : ''; ?>"
-                                                   <?php echo $is_locked ? 'readonly' : ''; ?>
-                                                   min="0" max="20">
+                                            <?php if ($is_locked && (!$pred || $pred['score1'] === null || $pred['score1'] === '')): ?>
+                                                <input type="text" class="score-input" value="-" readonly style="text-align:center; color:var(--text-muted);">
+                                            <?php else: ?>
+                                                <input type="number" 
+                                                       name="predictions[<?php echo $match['id']; ?>][score1]" 
+                                                       class="score-input" 
+                                                       value="<?php echo $pred ? $pred['score1'] : ''; ?>"
+                                                       <?php echo $is_locked ? 'readonly' : ''; ?>
+                                                       min="0" max="20">
+                                            <?php endif; ?>
                                             <span class="vs">VS</span>
-                                            <input type="number" 
-                                                   name="predictions[<?php echo $match['id']; ?>][score2]" 
-                                                   class="score-input" 
-                                                   value="<?php echo $pred ? $pred['score2'] : ''; ?>"
-                                                   <?php echo $is_locked ? 'readonly' : ''; ?>
-                                                   min="0" max="20">
+                                            <?php if ($is_locked && (!$pred || $pred['score2'] === null || $pred['score2'] === '')): ?>
+                                                <input type="text" class="score-input" value="-" readonly style="text-align:center; color:var(--text-muted);">
+                                            <?php else: ?>
+                                                <input type="number" 
+                                                       name="predictions[<?php echo $match['id']; ?>][score2]" 
+                                                       class="score-input" 
+                                                       value="<?php echo $pred ? $pred['score2'] : ''; ?>"
+                                                       <?php echo $is_locked ? 'readonly' : ''; ?>
+                                                       min="0" max="20">
+                                            <?php endif; ?>
                                         </div>
 
                                         <div class="team-info right">
@@ -207,7 +282,8 @@ render_header("Fixture", $user, "fixture");
                 foreach ($matches as $m) {
                     $m_open = false;
                     foreach ($stages as $s) if ($s['id'] == $m['stage_id']) $m_open = $s['is_open'];
-                    $m_deadline_passed = (strtotime($m['match_date']) - time()) < 3600;
+                    $m_first_match_date = isset($stage_first_matches[$m['stage_id']]) ? $stage_first_matches[$m['stage_id']] : $m['match_date'];
+                    $m_deadline_passed = time() > (strtotime($m_first_match_date) - 7200);
                     if ($m_open && !$m_deadline_passed && $m['status'] !== 'finished') { $any_open = true; break; }
                 }
                 if ($any_open): ?>
