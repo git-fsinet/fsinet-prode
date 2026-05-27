@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['predictions'])) {
             $stmt->execute([$match_id]);
             $match_info = $stmt->fetch();
 
-            if ($match_info && $match_info['is_open'] && $match_info['status'] !== 'finished') {
+            if ($match_info && $match_info['is_open']) {
                 // Get the first match date of this stage
                 $stmt_fm = $pdo->prepare("SELECT MIN(match_date) as first_match_date FROM matches WHERE stage_id = ?");
                 $stmt_fm->execute([$match_info['stage_id']]);
@@ -136,7 +136,7 @@ render_header("Fixture", $user, "fixture");
         <?php endif; ?>
 
         <?php if (isset($success_msg)): ?>
-            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: #4ade80; padding: 1rem; border-radius: 12px; margin-bottom: 2rem;" class="animate-fade-in">
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: #6cbc2aff; padding: 1rem; border-radius: 12px; margin-bottom: 2rem;" class="animate-fade-in">
                 <?php echo $success_msg; ?>
             </div>
         <?php endif; ?>
@@ -191,6 +191,14 @@ render_header("Fixture", $user, "fixture");
                 setInterval(updateCountdown, 1000);
                 updateCountdown();
             </script>
+        <?php elseif ((!$current_stage_open || $stage_deadline_passed) && $stage_deadline > 0): ?>
+            <div class="glass-card animate-fade-in" style="margin-bottom: 2rem; text-align: center; background: linear-gradient(135deg, var(--ios-error), #ff6b6b); color: white; padding: 1.5rem; border: none; box-shadow: 0 10px 30px rgba(255, 59, 48, 0.3);">
+                <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
+                    <i class="ph-duotone ph-lock-key" style="font-size: 36px;"></i>
+                </div>
+                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 600;">Etapa Cerrada</h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: 1rem; opacity: 0.9;">No se pueden cargar ó modificar resultados.</p>
+            </div>
         <?php endif; ?>
             <?php if (empty($grouped_matches)): ?>
                 <div class="glass-card" style="text-align: center; padding: 4rem;">
@@ -209,7 +217,7 @@ render_header("Fixture", $user, "fixture");
                             $first_match_date = isset($stage_first_matches[$match['stage_id']]) ? $stage_first_matches[$match['stage_id']] : $match['match_date'];
                             $deadline_timestamp = strtotime($first_match_date) - 7200;
                             $deadline_passed = time() > $deadline_timestamp;
-                            $is_locked = !$is_open || $match['status'] === 'finished' || $deadline_passed;
+                            $is_locked = !$is_open || $deadline_passed;
                             // Time remaining label
                             $secs_remaining = $deadline_timestamp - time();
                             $show_countdown = (!$is_locked || $deadline_passed) && $match['status'] !== 'finished';
@@ -271,6 +279,67 @@ render_header("Fixture", $user, "fixture");
                                         <span style="display:inline-flex;align-items:center;gap:0.3rem;color:var(--ios-success);font-weight:600;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Cierra en <?php echo $time_label; ?></span>
                                     <?php endif; ?>
                                 </div>
+                                <?php if ($is_locked): ?>
+                                    <?php 
+                                        $points = 0;
+                                        $badge_class = "";
+                                        $badge_text = "";
+                                        $badge_icon = "";
+
+                                        $has_pred = ($pred && $pred['score1'] !== null && $pred['score1'] !== '' && $pred['score2'] !== null && $pred['score2'] !== '');
+                                        $has_result = ($match['status'] === 'finished' && $match['result1'] !== null && $match['result2'] !== null);
+
+                                        if ($has_result) {
+                                            if ($has_pred) {
+                                                if ($pred['score1'] == $match['result1'] && $pred['score2'] == $match['result2']) {
+                                                    $points = 3;
+                                                    $badge_class = "background: rgba(0, 122, 255, 0.1); color: var(--ios-blue); border: 1px solid rgba(0, 122, 255, 0.2);";
+                                                    $badge_text = "Acertaste el resultado exacto (+3 pts)";
+                                                    $badge_icon = "ph-fill ph-check-circle";
+                                                } else {
+                                                    $pred_diff = $pred['score1'] - $pred['score2'];
+                                                    $actual_diff = $match['result1'] - $match['result2'];
+                                                    $pred_sign = $pred_diff > 0 ? 1 : ($pred_diff < 0 ? -1 : 0);
+                                                    $actual_sign = $actual_diff > 0 ? 1 : ($actual_diff < 0 ? -1 : 0);
+
+                                                    if ($pred_sign === $actual_sign) {
+                                                        $points = 1;
+                                                        $badge_class = "background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.2);";
+                                                        $badge_text = "Acertaste la tendencia (+1 pt)";
+                                                        $badge_icon = "ph-fill ph-check-circle";
+                                                    } else {
+                                                        $badge_class = "background: rgba(255, 59, 48, 0.1); color: var(--ios-error); border: 1px solid rgba(255, 59, 48, 0.2);";
+                                                        $badge_text = "No acertaste (0 pts)";
+                                                        $badge_icon = "ph-fill ph-x-circle";
+                                                    }
+                                                }
+                                            } else {
+                                                $badge_class = "background: rgba(255, 59, 48, 0.1); color: var(--ios-error); border: 1px solid rgba(255, 59, 48, 0.2);";
+                                                $badge_text = "No cargaste resultado (0 pts)";
+                                                $badge_icon = "ph-fill ph-warning-circle";
+                                            }
+                                        } else {
+                                            if ($has_pred) {
+                                                $badge_class = "background: rgba(118, 118, 128, 0.1); color: var(--ios-text-sec); border: 1px solid rgba(118, 118, 128, 0.2);";
+                                                $badge_text = "Pronóstico guardado. Esperando resultado oficial...";
+                                                $badge_icon = "ph-duotone ph-hourglass-high";
+                                            } else {
+                                                $badge_class = "background: rgba(255, 59, 48, 0.1); color: var(--ios-error); border: 1px solid rgba(255, 59, 48, 0.2);";
+                                                $badge_text = "No cargaste resultado (0 pts)";
+                                                $badge_icon = "ph-fill ph-warning-circle";
+                                            }
+                                        }
+                                    ?>
+                                    <div style="margin-top: 1rem; padding: 0.75rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; <?php echo $badge_class; ?>">
+                                        <i class="<?php echo $badge_icon; ?>" style="font-size: 20px;"></i>
+                                        <?php echo $badge_text; ?>
+                                        <?php if ($has_result): ?>
+                                        <div style="margin-left: 0.5rem; font-size: 0.8rem; opacity: 0.8; font-weight: 500;">
+                                            (Resultado Real: <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?>)
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -284,7 +353,7 @@ render_header("Fixture", $user, "fixture");
                     foreach ($stages as $s) if ($s['id'] == $m['stage_id']) $m_open = $s['is_open'];
                     $m_first_match_date = isset($stage_first_matches[$m['stage_id']]) ? $stage_first_matches[$m['stage_id']] : $m['match_date'];
                     $m_deadline_passed = time() > (strtotime($m_first_match_date) - 7200);
-                    if ($m_open && !$m_deadline_passed && $m['status'] !== 'finished') { $any_open = true; break; }
+                    if ($m_open && !$m_deadline_passed) { $any_open = true; break; }
                 }
                 if ($any_open): ?>
                     <div style="position: sticky; bottom: 2rem; text-align: right;">
