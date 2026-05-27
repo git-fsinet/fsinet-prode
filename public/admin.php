@@ -161,7 +161,7 @@ render_header("Panel Administrativo", $user, "admin");
         <div style="display: grid; gap: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; background: var(--ios-card-bg); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--ios-border);">
                 <div>
-                    <h2 style="margin: 0;">Panel Administrativo</h2>
+                    
                     <p class="text-muted" style="margin: 0.5rem 0 0 0;">Gestión de resultados y puntajes.</p>
                 </div>
                 <form action="" method="POST" style="margin: 0;">

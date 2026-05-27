@@ -3,13 +3,13 @@
 
 -- 1. Agregar columnas de penales a la tabla de partidos
 ALTER TABLE matches 
-ADD COLUMN IF NOT EXISTS penalties1 int DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS penalties2 int DEFAULT NULL;
+ADD COLUMN penalties1 int DEFAULT NULL,
+ADD COLUMN penalties2 int DEFAULT NULL;
 
 -- 2. Agregar columnas de ganador de penales a la tabla de pronósticos
 ALTER TABLE predictions 
-ADD COLUMN IF NOT EXISTS penalty_winner_team1 tinyint(1) DEFAULT '0',
-ADD COLUMN IF NOT EXISTS penalty_winner_team2 tinyint(1) DEFAULT '0';
+ADD COLUMN penalty_winner_team1 tinyint(1) DEFAULT '0',
+ADD COLUMN penalty_winner_team2 tinyint(1) DEFAULT '0';
 
 -- (Opcional) Si quieres limpiar la base de datos de producción igual que hicimos en local
 -- para que empiece de cero, descomenta y ejecuta las siguientes líneas:
