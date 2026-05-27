@@ -53,6 +53,19 @@ if ($last_day) {
     $recent_matches = $stmt->fetchAll();
 }
 
+// Get user predictions for recent matches
+$recent_predictions = [];
+if (!empty($recent_matches)) {
+    $match_ids = array_map(function($m) { return $m['id']; }, $recent_matches);
+    $placeholders = implode(',', array_fill(0, count($match_ids), '?'));
+    $stmt = $pdo->prepare("SELECT * FROM predictions WHERE user_id = ? AND match_id IN ($placeholders)");
+    $params = array_merge([$user_id], $match_ids);
+    $stmt->execute($params);
+    foreach ($stmt->fetchAll() as $p) {
+        $recent_predictions[$p['match_id']] = $p;
+    }
+}
+
 render_header("Resumen", $user, "resumen");
 ?>
 
@@ -75,26 +88,83 @@ render_header("Resumen", $user, "resumen");
     <div class="matches-grid" style="margin-bottom: 2rem;">
         <?php foreach ($recent_matches as $match): ?>
             <div class="glass-card match-card animate-fade-in" style="opacity: 0.9; cursor: default;">
-                <div class="match-card-content">
-                    <div class="team-info">
-                        <?php $code1 = getFlagCode($match['team1']); ?>
-                        <?php if ($code1): ?>
-                            <img src="https://flagcdn.com/w40/<?php echo $code1; ?>.png" alt="" class="flag">
-                        <?php endif; ?>
-                        <span style="font-size: 1.1rem; font-weight: <?php echo $match['result1'] > $match['result2'] ? '700' : '500'; ?>; color: var(--ios-text);"><?php echo htmlspecialchars($match['team1']); ?></span>
+                <div class="match-card-content" style="flex-wrap: wrap;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                        <div class="team-info">
+                            <?php $code1 = getFlagCode($match['team1']); ?>
+                            <?php if ($code1): ?>
+                                <img src="https://flagcdn.com/w40/<?php echo $code1; ?>.png" alt="" class="flag">
+                            <?php endif; ?>
+                            <span style="font-size: 1.1rem; font-weight: <?php echo $match['result1'] > $match['result2'] ? '700' : '500'; ?>; color: var(--ios-text);"><?php echo htmlspecialchars($match['team1']); ?></span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: center; background: var(--ios-text); color: white; padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 1.2rem; min-width: 80px; text-align: center;">
+                            <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?>
+                        </div>
+                        
+                        <div class="team-info right">
+                            <span style="font-size: 1.1rem; font-weight: <?php echo $match['result2'] > $match['result1'] ? '700' : '500'; ?>; color: var(--ios-text);"><?php echo htmlspecialchars($match['team2']); ?></span>
+                            <?php $code2 = getFlagCode($match['team2']); ?>
+                            <?php if ($code2): ?>
+                                <img src="https://flagcdn.com/w40/<?php echo $code2; ?>.png" alt="" class="flag">
+                            <?php endif; ?>
+                        </div>
                     </div>
+
+                    <?php 
+                    $points = 0;
+                    $pred_text = "No cargado";
+                    if (isset($recent_predictions[$match['id']])) {
+                        $pred = $recent_predictions[$match['id']];
+                        $has_pred = ($pred['score1'] !== null && $pred['score2'] !== null && $pred['score1'] !== '');
+                        if ($has_pred) {
+                            $pred_text = $pred['score1'] . ' - ' . $pred['score2'];
+                            if ($pred['score1'] === $pred['score2'] && (isset($pred['penalty_winner_team1']) && $pred['penalty_winner_team1'] || isset($pred['penalty_winner_team2']) && $pred['penalty_winner_team2'])) {
+                                $pred_text .= ' (P)';
+                            }
+
+                            $exact_match = ($pred['score1'] == $match['result1'] && $pred['score2'] == $match['result2']);
+                            $pred_diff = $pred['score1'] - $pred['score2'];
+                            $actual_diff = $match['result1'] - $match['result2'];
+                            $pred_sign = $pred_diff > 0 ? 1 : ($pred_diff < 0 ? -1 : 0);
+                            $actual_sign = $actual_diff > 0 ? 1 : ($actual_diff < 0 ? -1 : 0);
+                            $tendency_match = ($pred_sign === $actual_sign);
+
+                            $went_to_penalties = ($match['result1'] === $match['result2'] && $match['penalties1'] !== null && $match['penalties2'] !== null);
+                            
+                            $pts_exact = 3; $pts_tendency = 1; $pts_penalty = 3;
+                            if ($match['stage_id'] == 5) { $pts_exact = 6; $pts_tendency = 2; $pts_penalty = 6; }
+                            elseif ($match['stage_id'] == 7) { $pts_exact = 10; $pts_tendency = 3; $pts_penalty = 5; }
+
+                            if ($went_to_penalties) {
+                                if ($tendency_match) {
+                                    $real_penalty_winner = ($match['penalties1'] > $match['penalties2']) ? 1 : 2;
+                                    $predicted_penalty_winner = 0;
+                                    if (isset($pred['penalty_winner_team1']) && $pred['penalty_winner_team1']) $predicted_penalty_winner = 1;
+                                    elseif (isset($pred['penalty_winner_team2']) && $pred['penalty_winner_team2']) $predicted_penalty_winner = 2;
+                                    
+                                    if ($predicted_penalty_winner == $real_penalty_winner) {
+                                        $points = $pts_tendency + $pts_penalty;
+                                    } else {
+                                        $points = $pts_tendency;
+                                    }
+                                }
+                            } else {
+                                if ($exact_match) {
+                                    $points = $pts_exact;
+                                } elseif ($tendency_match) {
+                                    $points = $pts_tendency;
+                                }
+                            }
+                        }
+                    }
+                    ?>
                     
-                    <div style="display: flex; align-items: center; justify-content: center; background: var(--ios-text); color: white; padding: 0.5rem 1rem; border-radius: 12px; font-weight: 700; font-size: 1.2rem; min-width: 80px; text-align: center;">
-                        <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?>
+                    <div style="width: 100%; border-top: 1px dashed var(--ios-border); margin-top: 1rem; padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+                        <span style="color: var(--ios-text-sec);">Tu pronóstico: <strong><?php echo $pred_text; ?></strong></span>
+                        <span style="font-weight: 700; color: <?php echo $points > 0 ? 'var(--ios-success)' : 'var(--ios-text-sec)'; ?>; background: <?php echo $points > 0 ? 'rgba(52,199,89,0.1)' : 'rgba(118,118,128,0.1)'; ?>; padding: 0.2rem 0.6rem; border-radius: 8px;">+<?php echo $points; ?> pts</span>
                     </div>
-                    
-                    <div class="team-info right">
-                        <span style="font-size: 1.1rem; font-weight: <?php echo $match['result2'] > $match['result1'] ? '700' : '500'; ?>; color: var(--ios-text);"><?php echo htmlspecialchars($match['team2']); ?></span>
-                        <?php $code2 = getFlagCode($match['team2']); ?>
-                        <?php if ($code2): ?>
-                            <img src="https://flagcdn.com/w40/<?php echo $code2; ?>.png" alt="" class="flag">
-                        <?php endif; ?>
-                    </div>
+
                 </div>
             </div>
         <?php endforeach; ?>

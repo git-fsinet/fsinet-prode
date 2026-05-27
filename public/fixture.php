@@ -25,6 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['predictions'])) {
     foreach ($_POST['predictions'] as $match_id => $scores) {
         $score1 = $scores['score1'];
         $score2 = $scores['score2'];
+        
+        $pw1 = 0; $pw2 = 0;
+        if (isset($scores['penalty_winner'])) {
+            if ($scores['penalty_winner'] == '1') $pw1 = 1;
+            if ($scores['penalty_winner'] == '2') $pw2 = 1;
+        }
 
         if ($score1 !== '' && $score2 !== '') {
             // Get match date and stage open status
@@ -46,13 +52,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['predictions'])) {
                     $stmt = $pdo->prepare("SELECT id FROM predictions WHERE user_id = ? AND match_id = ?");
                     $stmt->execute([$user_id, $match_id]);
                     $exists = $stmt->fetch();
+                    
+                    if ($score1 != $score2 || $match_info['stage_id'] == 1) {
+                        $pw1 = 0; $pw2 = 0;
+                    }
 
                     if ($exists) {
-                        $stmt = $pdo->prepare("UPDATE predictions SET score1 = ?, score2 = ? WHERE user_id = ? AND match_id = ?");
-                        $stmt->execute([$score1, $score2, $user_id, $match_id]);
+                        $stmt = $pdo->prepare("UPDATE predictions SET score1 = ?, score2 = ?, penalty_winner_team1 = ?, penalty_winner_team2 = ? WHERE user_id = ? AND match_id = ?");
+                        $stmt->execute([$score1, $score2, $pw1, $pw2, $user_id, $match_id]);
                     } else {
-                        $stmt = $pdo->prepare("INSERT INTO predictions (user_id, match_id, score1, score2) VALUES (?, ?, ?, ?)");
-                        $stmt->execute([$user_id, $match_id, $score1, $score2]);
+                        $stmt = $pdo->prepare("INSERT INTO predictions (user_id, match_id, score1, score2, penalty_winner_team1, penalty_winner_team2) VALUES (?, ?, ?, ?, ?, ?)");
+                        $stmt->execute([$user_id, $match_id, $score1, $score2, $pw1, $pw2]);
                     }
                     $saved++;
                 }
@@ -81,7 +91,7 @@ if ($current_stage == 1) { // Assuming 1 is Group Stage
 }
 
 // Get Predictions for this user
-$stmt = $pdo->prepare("SELECT match_id, score1, score2 FROM predictions WHERE user_id = ?");
+$stmt = $pdo->prepare("SELECT match_id, score1, score2, penalty_winner_team1, penalty_winner_team2 FROM predictions WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $predictions = [];
 foreach ($stmt->fetchAll() as $p) {
@@ -265,9 +275,24 @@ render_header("Fixture", $user, "fixture");
                                         </div>
                                 </div>
                                 
+                                <?php if ($current_stage > 1): ?>
+                                <div class="user-penalties-container animate-fade-in" style="display: <?php echo ($pred && $pred['score1'] !== null && $pred['score1'] === $pred['score2']) ? 'flex' : 'none'; ?>; flex-direction:column; justify-content:center; align-items:center; gap: 0.5rem; padding: 0.75rem 1.5rem 1rem 1.5rem; margin: 1.5rem auto 1rem auto; border: 2px solid rgba(0, 122, 255, 0.2); border-radius: 12px; background: rgba(0, 122, 255, 0.03); width: max-content;">
+                                    <div style="font-size: 0.85rem; font-weight: 700; color: var(--ios-blue); letter-spacing: 0.5px; margin-bottom: 0.25rem;">PENALES</div>
+                                    <div style="display:flex; align-items:center; gap:2rem;">
+                                        <label style="display:flex; align-items:center; cursor:pointer;">
+                                            <input type="radio" name="predictions[<?php echo $match['id']; ?>][penalty_winner]" value="1" style="width:1.5rem; height:1.5rem; cursor:pointer; accent-color: var(--ios-blue);" <?php echo ($pred && isset($pred['penalty_winner_team1']) && $pred['penalty_winner_team1']) ? 'checked' : ''; ?> <?php echo $is_locked ? 'disabled' : ''; ?>>
+                                        </label>
+                                        <div style="font-size: 0.95rem; font-weight: 600; color: var(--ios-text-sec);">Ganador</div>
+                                        <label style="display:flex; align-items:center; cursor:pointer;">
+                                            <input type="radio" name="predictions[<?php echo $match['id']; ?>][penalty_winner]" value="2" style="width:1.5rem; height:1.5rem; cursor:pointer; accent-color: var(--ios-blue);" <?php echo ($pred && isset($pred['penalty_winner_team2']) && $pred['penalty_winner_team2']) ? 'checked' : ''; ?> <?php echo $is_locked ? 'disabled' : ''; ?>>
+                                        </label>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
                                 <div class="match-meta">
                                     <span style="display:inline-flex;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> <?php echo date('d/m H:i', strtotime($match['match_date'])); ?>hs</span>
-                                    <span style="display:inline-flex;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> <?php echo htmlspecialchars($match['stadium']); ?></span>
+                                    <span style="display:none;align-items:center;gap:0.3rem;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> <?php echo htmlspecialchars($match['stadium']); ?></span>
                                     <?php if ($deadline_passed && $match['status'] !== 'finished'): ?>
                                         <span style="display:inline-flex;align-items:center;gap:0.3rem;color:var(--ios-error);font-weight:600;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Plazo cerrado</span>
                                     <?php elseif (!$is_locked && $secs_remaining > 0 && $secs_remaining < 86400): ?>
@@ -290,22 +315,64 @@ render_header("Fixture", $user, "fixture");
                                         $has_result = ($match['status'] === 'finished' && $match['result1'] !== null && $match['result2'] !== null);
 
                                         if ($has_result) {
+                                            $went_to_penalties = ($match['result1'] === $match['result2'] && $match['penalties1'] !== null && $match['penalties2'] !== null);
+                                            
                                             if ($has_pred) {
-                                                if ($pred['score1'] == $match['result1'] && $pred['score2'] == $match['result2']) {
-                                                    $points = 3;
-                                                    $badge_class = "background: rgba(0, 122, 255, 0.1); color: var(--ios-blue); border: 1px solid rgba(0, 122, 255, 0.2);";
-                                                    $badge_text = "Acertaste el resultado exacto (+3 pts)";
-                                                    $badge_icon = "ph-fill ph-check-circle";
-                                                } else {
-                                                    $pred_diff = $pred['score1'] - $pred['score2'];
-                                                    $actual_diff = $match['result1'] - $match['result2'];
-                                                    $pred_sign = $pred_diff > 0 ? 1 : ($pred_diff < 0 ? -1 : 0);
-                                                    $actual_sign = $actual_diff > 0 ? 1 : ($actual_diff < 0 ? -1 : 0);
+                                                $exact_match = ($pred['score1'] == $match['result1'] && $pred['score2'] == $match['result2']);
+                                                $pred_diff = $pred['score1'] - $pred['score2'];
+                                                $actual_diff = $match['result1'] - $match['result2'];
+                                                $pred_sign = $pred_diff > 0 ? 1 : ($pred_diff < 0 ? -1 : 0);
+                                                $actual_sign = $actual_diff > 0 ? 1 : ($actual_diff < 0 ? -1 : 0);
+                                                $tendency_match = ($pred_sign === $actual_sign);
 
-                                                    if ($pred_sign === $actual_sign) {
-                                                        $points = 1;
+                                                $pts_exact = 3;
+                                                $pts_tendency = 1;
+                                                $pts_penalty = 3;
+                                                
+                                                if ($match['stage_id'] == 5) {
+                                                    $pts_exact = 6;
+                                                    $pts_tendency = 2;
+                                                    $pts_penalty = 6;
+                                                } elseif ($match['stage_id'] == 7) {
+                                                    $pts_exact = 10;
+                                                    $pts_tendency = 3;
+                                                    $pts_penalty = 5;
+                                                }
+
+                                                if ($went_to_penalties) {
+                                                    $real_penalty_winner = ($match['penalties1'] > $match['penalties2']) ? 1 : 2;
+                                                    $predicted_penalty_winner = 0;
+                                                    if (isset($pred['penalty_winner_team1']) && $pred['penalty_winner_team1']) $predicted_penalty_winner = 1;
+                                                    elseif (isset($pred['penalty_winner_team2']) && $pred['penalty_winner_team2']) $predicted_penalty_winner = 2;
+                                                    
+                                                    $penalty_hit = ($tendency_match && $predicted_penalty_winner == $real_penalty_winner);
+                                                    
+                                                    if ($penalty_hit) {
+                                                        $points = $pts_tendency + $pts_penalty;
+                                                        $badge_class = "background: rgba(0, 122, 255, 0.1); color: var(--ios-blue); border: 1px solid rgba(0, 122, 255, 0.2);";
+                                                        $badge_text = "Acertaste el empate y los penales (+{$points} pts)";
+                                                        $badge_icon = "ph-fill ph-check-circle";
+                                                    } elseif ($tendency_match) {
+                                                        $points = $pts_tendency;
                                                         $badge_class = "background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.2);";
-                                                        $badge_text = "Acertaste la tendencia (+1 pt)";
+                                                        $badge_text = "Acertaste la tendencia del empate (+{$points} pts)";
+                                                        $badge_icon = "ph-fill ph-check-circle";
+                                                    } else {
+                                                        $badge_class = "background: rgba(255, 59, 48, 0.1); color: var(--ios-error); border: 1px solid rgba(255, 59, 48, 0.2);";
+                                                        $badge_text = "No acertaste (0 pts)";
+                                                        $badge_icon = "ph-fill ph-x-circle";
+                                                    }
+                                                } else {
+                                                    // Normal match
+                                                    if ($exact_match) {
+                                                        $points = $pts_exact;
+                                                        $badge_class = "background: rgba(0, 122, 255, 0.1); color: var(--ios-blue); border: 1px solid rgba(0, 122, 255, 0.2);";
+                                                        $badge_text = "Acertaste el resultado exacto (+{$points} pts)";
+                                                        $badge_icon = "ph-fill ph-check-circle";
+                                                    } elseif ($tendency_match) {
+                                                        $points = $pts_tendency;
+                                                        $badge_class = "background: rgba(255, 149, 0, 0.1); color: #FF9500; border: 1px solid rgba(255, 149, 0, 0.2);";
+                                                        $badge_text = "Acertaste la tendencia (+{$points} pts)";
                                                         $badge_icon = "ph-fill ph-check-circle";
                                                     } else {
                                                         $badge_class = "background: rgba(255, 59, 48, 0.1); color: var(--ios-error); border: 1px solid rgba(255, 59, 48, 0.2);";
@@ -330,13 +397,12 @@ render_header("Fixture", $user, "fixture");
                                             }
                                         }
                                     ?>
-                                    <div style="margin-top: 1rem; padding: 0.75rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; <?php echo $badge_class; ?>">
-                                        <i class="<?php echo $badge_icon; ?>" style="font-size: 20px;"></i>
-                                        <?php echo $badge_text; ?>
-                                        <?php if ($has_result): ?>
-                                        <div style="margin-left: 0.5rem; font-size: 0.8rem; opacity: 0.8; font-weight: 500;">
-                                            (Resultado Real: <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?>)
-                                        </div>
+                                    <div style="margin-top: 1rem; padding: 0.75rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; flex-wrap: wrap; text-align: center; <?php echo $badge_class; ?>">
+                                        <div><i class="<?php echo $badge_icon; ?>" style="font-size: 18px; position:relative; top: 2px;"></i> <?php echo $badge_text; ?></div>
+                                        <?php if ($has_result && isset($went_to_penalties) && $went_to_penalties): ?>
+                                            <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.8; margin-left: 0.5rem;">(Resultado Real: (<?php echo $match['penalties1']; ?>) <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?> (<?php echo $match['penalties2']; ?>))</span>
+                                        <?php elseif ($has_result): ?>
+                                            <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.8; margin-left: 0.5rem;">(Resultado Real: <?php echo $match['result1']; ?> - <?php echo $match['result2']; ?>)</span>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
@@ -364,3 +430,25 @@ render_header("Fixture", $user, "fixture");
         </form>
 
 <?php render_footer($user, "fixture"); ?>
+
+<script>
+document.querySelectorAll('.match-card').forEach(card => {
+    const r1 = card.querySelector('input[name$="[score1]"]');
+    const r2 = card.querySelector('input[name$="[score2]"]');
+    const penContainer = card.querySelector('.user-penalties-container');
+    
+    if (r1 && r2 && penContainer) {
+        const updatePenalties = () => {
+            if (r1.value !== '' && r2.value !== '' && r1.value === r2.value) {
+                penContainer.style.display = 'flex';
+            } else {
+                penContainer.style.display = 'none';
+                const radios = penContainer.querySelectorAll('input[type="radio"]');
+                radios.forEach(r => r.checked = false);
+            }
+        };
+        r1.addEventListener('input', updatePenalties);
+        r2.addEventListener('input', updatePenalties);
+    }
+});
+</script>
