@@ -908,6 +908,10 @@ input:focus {
         display: none;
     }
 
+    .hide-mobile {
+        display: none !important;
+    }
+
     /* Bottom Navigation Bar */
     .mobile-nav {
         display: flex;
