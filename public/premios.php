@@ -115,7 +115,7 @@ render_header("Premios", $user, "premios");
             </div>
             <div class="prize-pos" style="color: #ffc400ff;">1º Lugar</div>
             <div class="prize-title" style="font-size: 2.2rem;">Campeón</div>
-            <p class="prize-desc">Orden de Compra en <strong>PS3 Larroque ó en Adrogué PC</strong> por valor de:<br><strong style="font-size: 1.3em; display: block; margin-top: 0.5rem; color: var(--ios-text);">$300.000</strong></p>
+            <p class="prize-desc">Orden de Compra en <strong>PS3 Larroque ó Adrogué PC</strong> por valor de:<br><strong style="font-size: 1.3em; display: block; margin-top: 0.5rem; color: var(--ios-text);">$300.000</strong></p>
         </div>
 
         <!-- 2do Puesto -->
