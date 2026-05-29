@@ -115,7 +115,7 @@ render_header("Premios", $user, "premios");
             </div>
             <div class="prize-pos" style="color: #ffc400ff;">1º Lugar</div>
             <div class="prize-title" style="font-size: 2.2rem;">Campeón</div>
-            <p class="prize-desc">Orden de Compra en <strong>Frávega</strong> por valor de<br><strong style="font-size: 1.3em; display: block; margin-top: 0.5rem; color: var(--ios-text);">$500.000</strong></p>
+            <p class="prize-desc">A Definir.</p>
         </div>
 
         <!-- 2do Puesto -->
@@ -125,7 +125,7 @@ render_header("Premios", $user, "premios");
             </div>
             <div class="prize-pos" style="color: #c0c0c0;">2º Lugar</div>
             <div class="prize-title">Subcampeón</div>
-            <p class="prize-desc">Voucher en <strong>Ruggiero</strong> por almuerzo o cena para dos personas.</p>
+            <p class="prize-desc">A Definir.</p>
         </div>
 
         <!-- 3er Puesto -->
@@ -135,7 +135,7 @@ render_header("Premios", $user, "premios");
             </div>
             <div class="prize-pos" style="color: #cd7f32;">3º Lugar</div>
             <div class="prize-title">Tercer Puesto</div>
-            <p class="prize-desc">Voucher en <strong>Danke</strong> por almuerzo o cena para dos personas.</p>
+            <p class="prize-desc">A Definir.</p>
         </div>
     </div>
 </div>
